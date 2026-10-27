@@ -20,7 +20,7 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=lib/repos.sh
+# shellcheck source=/dev/null
 source "$here/lib/repos.sh"
 
 if [[ $# -lt 2 ]]; then
