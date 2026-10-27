@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Stub claude: records "$PWD|$*" in $STUB_CALLS and prints a session link.
+echo "$PWD|$*" >> "${STUB_CALLS:?}"
+echo "${STUB_CLAUDE_OUTPUT:-Created session https://claude.ai/code/session_abc123}"

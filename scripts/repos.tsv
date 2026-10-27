@@ -1,0 +1,6 @@
+# name	slug	clone	features (comma list of gate, eval; - for none)
+codecite	jamescrowley321/codecite	~/repos/codecite	gate,eval
+identity-stack	jamescrowley321/identity-stack	~/repos/auth/identity-stack	gate
+terraform-provider-descope	jamescrowley321/terraform-provider-descope	~/repos/auth/terraform-provider-descope	gate
+identity-stack-planning	jamescrowley321/identity-stack-planning	~/repos/auth/identity-stack-planning	-
+agentic-ppp	jamescrowley321/agentic-ppp	~/repos/auth/agentic-ppp	-

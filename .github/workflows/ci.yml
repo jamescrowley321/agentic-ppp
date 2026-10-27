@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+# Job names are required-check contexts in oss-admin terraform/agentic-ppp.
+# Renaming one breaks merges until the Terraform changes too.
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # nullglob: pocs/*/*/*.sh matches nothing until a POC ships a script.
+      - name: shellcheck
+        run: |
+          shopt -s nullglob
+          shellcheck scripts/*.sh scripts/lib/*.sh scripts/tests/*.sh pocs/*/*/*.sh
+
+  script-tests:
+    name: script-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: scripts/tests
+        run: scripts/tests/run.sh
+      - name: POC tests
+        run: |
+          shopt -s nullglob
+          for t in pocs/*/*/tests/run.sh; do
+            echo "== $t"
+            "$t"
+          done
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # advanced-security: false makes findings fail this job instead of only
+      # reaching the Security tab.
+      - uses: zizmorcore/zizmor-action@85b2b9fb8e3325e7a23d7d0a9d7ba5ae0f999e3e # v0.7.1
+        with:
+          version: 1.31.1
+          advanced-security: false
+          persona: regular
+          min-severity: low
