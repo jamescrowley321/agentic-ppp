@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Stub gh: records its args in $STUB_CALLS and serves
+# $STUB_FIXTURES/<repo-name>/<key>.json, where the repo name comes from the -R
+# slug (else the working directory's name) and key is pr-list, pr-<n>, pinned,
+# cloud-ready or issue-<n>. A file named "fail" in the repo's fixture dir makes
+# every call exit 1. -q/--jq expressions are applied with jq -r.
+echo "$*" >> "${STUB_CALLS:?}"
+args=("$@")
+slug="" jq_expr="" words=()
+i=0
+while [[ $i -lt ${#args[@]} ]]; do
+  a="${args[$i]}"
+  case "$a" in
+    -R | --repo) i=$((i + 1)); slug="${args[$i]}" ;;
+    -q | --jq) i=$((i + 1)); jq_expr="${args[$i]}" ;;
+    --label | --state | --base | --json | --limit | -L | -s | -B | -l) i=$((i + 1)); [[ "$a" == "--label" || "$a" == "-l" ]] && words+=("label:${args[$i]}") ;;
+    -*) ;;
+    *) words+=("$a") ;;
+  esac
+  i=$((i + 1))
+done
+repo="${slug##*/}"
+[[ -n "$repo" ]] || repo="$(basename "$PWD")"
+dir="${STUB_FIXTURES:?}/$repo"
+[[ ! -e "$dir/fail" ]] || { echo "gh: simulated failure for $repo" >&2; exit 1; }
+key=""
+case "${words[0]:-} ${words[1]:-}" in
+  "pr list") key="pr-list" ;;
+  "pr view") key="pr-${words[2]:-}" ;;
+  "issue view") key="issue-${words[2]:-}" ;;
+  "issue list")
+    case " ${words[*]} " in
+      *" label:cloud-ready "*) key="cloud-ready" ;;
+      *" label:pinned "*) key="pinned" ;;
+      *) key="issue-list" ;;
+    esac ;;
+esac
+file="$dir/$key.json"
+[[ -f "$file" ]] || { echo "gh stub: no fixture $file" >&2; exit 1; }
+if [[ -n "$jq_expr" ]]; then jq -r "$jq_expr" < "$file"; else cat "$file"; fi
