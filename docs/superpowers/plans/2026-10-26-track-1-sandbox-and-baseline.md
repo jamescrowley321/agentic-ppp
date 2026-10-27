@@ -15,7 +15,7 @@
 ## Global Constraints
 
 - Model: "the newest GLM listed on OpenRouter, for setups 1 to 5, including the Ralph baseline (`backend: pi` on each role)". It is looked up when a run starts and recorded.
-- Key: a dedicated Track 1 OpenRouter key minted in oss-admin Terraform, stored at `~/.config/agentic-ppp/env` (mode 0600), "never printed, never committed". It stays separate from Track 2's key.
+- Key: a dedicated Track 1 OpenRouter key minted in oss-admin Terraform (oss-admin#35, `openrouter_api_key.agentic_ppp["track-1"]`, $100, no reset), stored at `~/.config/agentic-ppp/track-1.key` (mode 0600), "never printed, never committed". It stays separate from Track 2's key.
 - Spend: "A run that reaches its $10 cap stops and the open issues score **failed**." "Total Track 1 limit $100."
 - Git: feature branches in worktrees under `~/repos/auth/agentic-ppp-worktrees/` (oss-admin under `~/repos/oss-admin-worktrees/`), named `<type>/<short-description>`, with conventional commits and squash-merged PRs. James merges. Never force-push. Fetch before pushing.
 - Repo settings live in oss-admin (`terraform/agentic-ppp`), never in the GitHub UI.
@@ -64,7 +64,7 @@
 | `pocs/track-1/ralph-web/` | Setup 1: `ralph.yml`, `run.sh`, `CHECKLIST.md`, `README.md` |
 | `pocs/track-1/tests/` | Tests for the loop port and setup 1 |
 | `notes/track-1/ralph-web.md` | Setup 1 notes |
-| oss-admin `terraform/blind-peer-review/agentic-ppp-track1-key.tf` (+ `variables.tf`, `terraform.tfvars`, `README.md`) | Track 1 key and the agentic-ppp lens cap |
+| oss-admin `terraform/blind-peer-review/terraform.tfvars` and `README.md` | The agentic-ppp lens cap (the Track 1 key is minted by oss-admin#35) |
 | oss-admin `terraform/agentic-ppp/{branch_protection,actions}.tf` (+ `variables.tf`, `terraform.tfvars`, `README.md`) | `main` protection, plus the `RUN_LENSES` variable |
 
 `notes/track-1/` and `pocs/track-1/`, rather than the spec's `notes/<setup>.md` and `pocs/<name>/`: Track 2 writes `notes/<technique>.md` and `pocs/<name>/` for some of the same tools (durable-subagents, pi supervisor, cloud sessions), and the two tracks' files must not collide.
@@ -78,7 +78,7 @@ State layout, outside every repo: `~/.local/state/agentic-ppp/track-1/<setup>/` 
 | PR | Repo | Tasks | Opens after |
 | --- | --- | --- | --- |
 | A `feat(sandbox): add the Track 1 sandbox, its issue queues and the lab scripts` | agentic-ppp | 1–6 | — |
-| B `feat(agentic-ppp): mint the Track 1 key and protect main` | oss-admin | 7 | PR A's first CI run, which supplies the check names |
+| B `feat(agentic-ppp): protect main and raise the agentic-ppp lens cap` | oss-admin | 7 | PR A's first CI run, which supplies the check names |
 | C `feat(pocs): port the loop and set up the Ralph web baseline` | agentic-ppp | 9–12 | Task 8 (the smoke test passes) |
 | D `docs(notes): record the Ralph web baseline run` | agentic-ppp | 13 | James's run |
 
@@ -332,18 +332,18 @@ def test_sandbox_tree_equals_source(src_repo):        # git rev-parse sandbox-v1
 - Modify: `terraform/agentic-ppp/variables.tf`, `terraform/agentic-ppp/terraform.tfvars`, `terraform/agentic-ppp/README.md`
 
 **Interfaces:**
-- Produces: the output `agentic_ppp_track1_key` (sensitive) in `blind-peer-review-github`. The Actions variable `RUN_LENSES=true` on agentic-ppp. `main` protected and requiring the Task 6 check names.
+- Produces: the Actions variable `RUN_LENSES=true` on agentic-ppp. `main` protected and requiring the Task 6 check names.
 
 - [ ] **Step 1: Worktree.** `git -C ~/repos/oss-admin fetch && git -C ~/repos/oss-admin worktree add ~/repos/oss-admin-worktrees/feat-agentic-ppp-track-1 -b feat/agentic-ppp-track-1 origin/main`. Then confirm #33's root is present: `ls terraform/agentic-ppp/repository.tf`.
-- [ ] **Step 2: The Track 1 key.** Model it on `codecite-eval-key.tf`. Add `resource "openrouter_api_key" "agentic_ppp_track1"` with `name = "agentic-ppp-track-1"` and `limit = var.agentic_ppp_track1_key_limit_usd`, and no `limit_reset`, so the $100 caps the whole of Track 1, not each month (check the provider accepts it being left out; if it does not, use `"monthly"` and say so in the PR). Add `output "agentic_ppp_track1_key"` (`sensitive = true`, description "agentic-ppp Track 1 key; read with `terraform output -raw agentic_ppp_track1_key`"). Add no GitHub secret, since only local pi uses it. The header comment says it is separate from Track 2's key and from the agentic-ppp lens key. `variables.tf`: `agentic_ppp_track1_key_limit_usd` (number, validation `> 0 && <= 100`). `terraform.tfvars`: `agentic_ppp_track1_key_limit_usd = 100`, with a comment giving the spec's split (five measured runs at $10, up to five re-runs, crash runs).
-- [ ] **Step 3: The lens cap.** In `lens_review_key_limit_overrides_usd`, add `"agentic-ppp" = 100`, commented: "about $0.55 a push; a Track 1 run is roughly 25 lens runs across two queues, about $14, and there are about a dozen runs". The README's resource table gains the Track 1 key row and its rotation note (rewrite `~/.config/agentic-ppp/env` after `-replace`).
+- [ ] **Step 2: The Track 1 key.** Nothing to add: oss-admin#35 mints `openrouter_api_key.agentic_ppp["track-1"]` ($100, no `limit_reset`) and `["track-2"]` ($30), read from the `agentic_ppp_keys` output. Confirm it has merged: `grep -n agentic_ppp terraform/blind-peer-review/agentic-ppp-keys.tf`.
+- [ ] **Step 3: The lens cap.** In `lens_review_key_limit_overrides_usd`, add `"agentic-ppp" = 100`, commented: "about $0.55 a push; a Track 1 run is roughly 25 lens runs across two queues, about $14, and there are about a dozen runs". 
 - [ ] **Step 4: `main` protection.** Copy `terraform/codecite/branch_protection.tf` into `terraform/agentic-ppp/`, with one change: `enforce_admins = true`, commented that the lab loops push with James's own token, so an admin bypass would let a loop push to `main`. Add a comment that `lab/**` is unprotected on purpose: the conflict trap merges there without review, and the loops push there with `--force-with-lease` during a restack. Copy the variables `required_status_checks_strict` and `required_status_check_contexts` (with its non-empty validation) from codecite's `variables.tf`. `terraform.tfvars`: `required_status_checks_strict = true` and `required_status_check_contexts = ["harness", "lint", "test"]`, which are the exact names from Task 6 Step 9. The lens Merge Gate stays advisory, as in codecite.
 - [ ] **Step 5: `RUN_LENSES`.** `actions.tf`: `resource "github_actions_variable" "run_lenses" { repository = github_repository.this.name, variable_name = "RUN_LENSES", value = "true" }`, with a comment saying the lens switch lives here, not in `gh variable set`.
 - [ ] **Step 6: The root README.** Branch protection moves from "Not managed here yet" to the managed list, with the `lab/**` note.
 - [ ] **Step 7: Verify.** `terraform fmt -check -recursive terraform`, then for `agentic-ppp` and `blind-peer-review` run `terraform -chdir=terraform/<root> init -backend=false && terraform -chdir=terraform/<root> validate`. Expected: no fmt output, and `Success! The configuration is valid.` twice.
-- [ ] **Step 8: Commit, push and open PR B.** `git commit -m "feat(agentic-ppp): mint the Track 1 key and protect main"`, `git push -u origin feat/agentic-ppp-track-1`, then `gh pr create --base main --title "feat(agentic-ppp): mint the Track 1 key and protect main"`. The body has a summary, a "Before applying" section (merge, confirm `blind-peer-review-github` (expected: 1 key to add and the lens key's limit updated in place) and `agentic-ppp-github` (expected: protection and variable to add). If the App lacks the Actions-variables permission, the `agentic-ppp` run fails on `github_actions_variable`, and the fix is to grant it in the App's settings), and `## AI provenance`.
+- [ ] **Step 8: Commit, push and open PR B.** `git commit -m "feat(agentic-ppp): protect main and raise the agentic-ppp lens cap"`, `git push -u origin feat/agentic-ppp-track-1`, then `gh pr create --base main --title "feat(agentic-ppp): protect main and raise the agentic-ppp lens cap"`. The body has a summary, a "Before applying" section (merge, confirm `blind-peer-review-github` (expected: the lens key's limit updated in place) and `agentic-ppp-github` (expected: protection and variable to add). If the App lacks the Actions-variables permission, the `agentic-ppp` run fails on `github_actions_variable`, and the fix is to grant it in the App's settings), and `## AI provenance`.
 
-> **James: checkpoint A.** Merge PR A and PR B (B first is fine: A's checks already report). Confirm both TFC runs. Write the key file without printing it: `install -d -m 700 ~/.config/agentic-ppp && (umask 077; printf 'TRACK1_OPENROUTER_API_KEY=%s\n' "$(terraform -chdir=terraform/blind-peer-review output -raw agentic_ppp_track1_key)" > ~/.config/agentic-ppp/env)` from an oss-admin checkout logged in to TFC. Then check `stat -c %a ~/.config/agentic-ppp/env`, which should print `600`.
+> **James: checkpoint A.** Merge PR A and PR B (B first is fine: A's checks already report). Confirm both TFC runs. Write both key files without printing them, from an oss-admin checkout logged in to TFC: `install -d -m 700 ~/.config/agentic-ppp && (umask 077; for t in track-1 track-2; do terraform -chdir=terraform/blind-peer-review output -json agentic_ppp_keys | jq -r --arg t "$t" '.[$t]' > ~/.config/agentic-ppp/$t.key; done)`. Then `stat -c %a ~/.config/agentic-ppp/*.key` prints `600` twice.
 
 ### Task 8: Cut `sandbox-v1` and smoke-test the lab mechanics
 
@@ -370,18 +370,19 @@ Start a fresh worktree for PR C: `~/repos/auth/agentic-ppp-worktrees/feat-track-
 
 **Interfaces:**
 - Produces:
-  - `pi-openrouter-key.sh [--require track-1]`. The codecite case stays word for word. A new case comes first, for `$PWD` under `$HOME/.local/state/agentic-ppp/track-1/*` or `$HOME/repos/auth/agentic-ppp-worktrees/lab-*`: it reads `TRACK1_OPENROUTER_API_KEY` from `$HOME/.config/agentic-ppp/env`, refusing (exit 1, message on stderr, nothing on stdout) unless the file's mode is `600`. With `--require track-1`, any other `$PWD` exits 1 with nothing on stdout. Without the flag, other paths keep today's behaviour (codecite key or default key).
-  - `pi-lab`: a POSIX sh shim. It requires `LAB_REAL_PI` and `LAB_MODEL`, exports `PI_CODING_AGENT_DIR=$HOME/.config/agentic-ppp/pi-agent`, and runs `exec "$LAB_REAL_PI" --model "openrouter/$LAB_MODEL" --no-context-files --no-skills --no-extensions --no-mcp --no-prompt-templates --no-themes "$@"`. `--no-context-files` is needed even with a clean agent directory, because worktrees under `~/repos/auth/` would otherwise load `~/repos/auth/CLAUDE.md`.
+  - `pi-openrouter-key.sh [--require track-1|track-2]`. The codecite case stays word for word. New cases come first: `$PWD` under `$HOME/.local/state/agentic-ppp/track-1/*` or `$HOME/repos/auth/agentic-ppp-worktrees/lab-*` prints `$HOME/.config/agentic-ppp/track-1.key`; `$PWD` under `$HOME/.local/state/agentic-ppp/track-2/*` prints `track-2.key`. Each refuses (exit 1, message on stderr, nothing on stdout) unless the file exists with mode `600`. With `--require <track>`, a `$PWD` outside that track's paths exits 1 with nothing on stdout. Without the flag, other paths keep today's behaviour (codecite key or default key). Track 2's local pi runs (a later plan) reuse this script and `pi-lab` with `--require track-2`; `pi_agent.write_agent_dir` takes the track and writes `pi-agent-<track>/`.
+  - `pi-lab`: a POSIX sh shim. It requires `LAB_REAL_PI` and `LAB_MODEL`, exports `PI_CODING_AGENT_DIR=$HOME/.config/agentic-ppp/pi-agent-${LAB_TRACK:-track-1}`, and runs `exec "$LAB_REAL_PI" --model "openrouter/$LAB_MODEL" --no-context-files --no-skills --no-extensions --no-mcp --no-prompt-templates --no-themes "$@"`. `--no-context-files` is needed even with a clean agent directory, because worktrees under `~/repos/auth/` would otherwise load `~/repos/auth/CLAUDE.md`.
   - `latest_glm.pick(models: list[dict]) -> str`: the newest `created` among ids matching `^z-ai/glm-[0-9]+(\.[0-9]+)*$` (so flash, air, vision and `:free` variants are left out). The CLI `python -m lab.latest_glm [--models-json FILE]` reads `https://openrouter.ai/api/v1/models` (public, no key) and prints the id.
-  - `pi_agent.write_agent_dir(home: Path, model: str) -> Path`. It writes `<home>/.config/agentic-ppp/pi-agent/` with `settings.json` (`defaultProvider "openrouter"`, `defaultModel` = model, empty `packages`, `skills` and `extensions`), `auth.json` (mode 600: `{"openrouter": {"type": "api_key", "key": "!<home>/.config/codecite/pi-openrouter-key.sh --require track-1"}}`) and `models.json` (one `modelOverrides` entry for `model`, with the same `compat.openRouterRouting` shape James's `~/.pi/agent/models.json` uses for `z-ai/glm-*` today: `zdr: true`, `quantizations: ["fp8"]`, `sort: "price"`). It is idempotent, and it never reads or writes a key value.
+  - `pi_agent.write_agent_dir(home: Path, model: str, track: str = "track-1") -> Path`. It writes `<home>/.config/agentic-ppp/pi-agent-<track>/` with `settings.json` (`defaultProvider "openrouter"`, `defaultModel` = model, empty `packages`, `skills` and `extensions`), `auth.json` (mode 600: `{"openrouter": {"type": "api_key", "key": "!<home>/.config/codecite/pi-openrouter-key.sh --require <track>"}}`) and `models.json` (one `modelOverrides` entry for `model`, with the same `compat.openRouterRouting` shape James's `~/.pi/agent/models.json` uses for `z-ai/glm-*` today: `zdr: true`, `quantizations: ["fp8"]`, `sort: "price"`). It is idempotent, and it never reads or writes a key value.
 
 **Context:** today `~/.config/codecite/pi-openrouter-key.sh` is not wired into James's pi at all (`~/.pi/agent/auth.json` holds a literal key). The isolated lab agent directory is the only thing that calls the script, so James's everyday pi stays unchanged.
 
 - [ ] **Step 1: Write the failing tests**
 
 ```python
-# test_key_routing.py: runs the script with sh, HOME=tmp_path, and fake env files holding sk-or-v1-FAKETRACK1 / FAKECODECITE / FAKEDEFAULT
+# test_key_routing.py: runs the script with sh, HOME=tmp_path, and fake key files holding sk-or-v1-FAKETRACK1 / FAKETRACK2 / FAKECODECITE / FAKEDEFAULT
 def test_lab_runner_dir_gets_track1_key():              # cwd $HOME/.local/state/agentic-ppp/track-1/ralph-web/queue-a/runner -> FAKETRACK1
+def test_track2_state_dir_gets_track2_key():           # cwd $HOME/.local/state/agentic-ppp/track-2/isp-66 -> FAKETRACK2; --require track-1 there -> rc 1
 def test_lab_worktree_gets_track1_key():                # cwd $HOME/repos/auth/agentic-ppp-worktrees/lab-ralph-web-queue-a-feat-x -> FAKETRACK1
 def test_codecite_and_default_unchanged():              # $HOME/repos/codecite -> FAKECODECITE; $HOME/repos/auth/agentic-ppp -> FAKEDEFAULT
 def test_require_track1_fails_closed_outside_lab_paths():  # --require track-1 from $HOME/repos/auth/agentic-ppp -> rc 1, stdout ""
@@ -476,7 +477,7 @@ The fake gh must answer `pr view --json baseRefName,headRefOid`, `run list`, `ru
 - Consumes: `render.sh` (Task 11); `pi-lab`, `latest_glm` and `pi_agent` (Task 9); `spend_guard` (Task 10); `reset` and `conflict_trap` (Tasks 4–5).
 - Produces:
   - `run.sh <queue-a|queue-b> [--prepare-only] [ralph run args…]`, where `LAB_SETUP` defaults to `ralph-web` (the crash run uses `LAB_SETUP=ralph-web-crash`). In order:
-    1. Refuse unless `~/.config/agentic-ppp/env` is mode 600.
+    1. Refuse unless `~/.config/agentic-ppp/track-1.key` is mode 600.
     2. Write `<state>/<setup>/model.txt` from `latest_glm` if it is absent; both queues share it.
     3. Write the agent dir with `pi_agent`.
     4. Render the loop into `<state>/<setup>/<queue>/runner`.
