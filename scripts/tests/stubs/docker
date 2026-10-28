@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Stub docker: records its args in $STUB_CALLS, and in $STUB_FIXTURES/docker.env
+# the environment it was started with.
+echo "docker $*" >> "${STUB_CALLS:?}"
+env > "${STUB_FIXTURES:?}/docker.env"

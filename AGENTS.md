@@ -48,6 +48,9 @@ Read the design for your track before any non-trivial change.
   public repos and tools named in the specs are fine. Anything else is
   "another project".
 - No secrets or keys in the repo. Keys live in `~/.config/agentic-ppp/`.
+- Start pi, and any tool that starts pi, only through `scripts/ppp-run.sh`.
+  Never with James's own pi setup (`~/.pi/agent`). See
+  `docs/superpowers/specs/2026-10-27-pi-sandbox-design.md`.
 - Every PR body has an AI provenance section naming the harness and the
   model, and the box `- [x] A human has reviewed this change and is
   accountable for it`, ticked.
