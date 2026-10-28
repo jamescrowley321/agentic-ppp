@@ -28,6 +28,9 @@ Finished blog posts go to James's personal-blog repo, not here.
 | `scripts/repos.tsv` | The repo list: name, slug, clone path, features |
 | `scripts/lib/repos.sh` | Reads `repos.tsv` |
 | `scripts/cloud-launch.sh`, `scripts/cloud-status.sh` | Shared cloud scripts |
+| `scripts/ppp-run.sh` | Runs pi with only agentic-ppp's OpenRouter key: as the `ppp` user, or `--docker` |
+| `scripts/setup-ppp-user.sh` | One-time `sudo` setup of the `ppp` user and its keys |
+| `scripts/pi-docker/Dockerfile` | The image `ppp-run.sh --docker` runs |
 | `scripts/tests/` | Plain-bash tests for the scripts |
 | `.github/workflows/ci.yml` | Jobs `shellcheck`, `script-tests`, `zizmor` |
 | `pocs/track-2/cloud-loop/` | A timer script that launches the next queued cloud session |

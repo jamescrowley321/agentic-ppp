@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Stub curl: records its args in $STUB_CALLS and its stdin in
+# $STUB_FIXTURES/curl.stdin, then prints $STUB_FIXTURES/curl.json. A file
+# named curl-fail in the fixture dir makes it exit 22, like curl -f on a 4xx.
+echo "curl $*" >> "${STUB_CALLS:?}"
+cat > "${STUB_FIXTURES:?}/curl.stdin"
+[[ ! -e "$STUB_FIXTURES/curl-fail" ]] || exit 22
+cat "$STUB_FIXTURES/curl.json"
