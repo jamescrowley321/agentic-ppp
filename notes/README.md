@@ -1,11 +1,16 @@
 # Notes
 
-One file per technique. Track 1 notes go under `notes/track-1/`, Track 2
-notes under `notes/track-2/`, as `<technique>.md`. Each file has one entry per
-piece of work. Agents fill in the facts. James writes the parts marked
-*(James)* in the first person.
+Track 1 notes go under `notes/track-1/`, one file per setup, as
+`<setup>.md`. Their headings are the ones in "Per-setup notes" in
+`docs/superpowers/specs/2026-10-26-objective-evaluation-design.md`.
 
-Each entry has these fields, in this order:
+Track 2 notes go under `notes/track-2/`, one file per technique, as
+`<technique>.md`. Each file has one entry per piece of work.
+
+Agents fill in the facts. James writes the parts marked *(James)* in the
+first person.
+
+Each Track 2 entry has these fields, in this order:
 
 1. **The job.** Repo, issue and PR links.
 2. **How to use it for this.** The steps in order, with the exact prompt or
